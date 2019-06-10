@@ -21,13 +21,15 @@ public class LogAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LogAspect.class);
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+    private boolean normal = true;
     private static Date beforeTime = null;
-    private static Date afterTime = null;
     private static Date afterReturningTime = null;
     private static Date afterThrowingTime = null;
 
-
-    // 配置织入点
+    /**
+     * 配置连接点
+     * @param
+     * */
     @Pointcut("@annotation(com.tyhy.annotation.SystemControllerLog)")
     public void logPointCut() {
     }
@@ -39,25 +41,15 @@ public class LogAspect {
     @Before(value = "logPointCut()")
     public void doBefore(JoinPoint joinPoint) {
         beforeTime = new Date();
-        handleLog(joinPoint, null);
     }
 
     /**
      * 前置通知 用于拦截操作，在方法执行后执行
      * @param joinPoint 切点
      */
-    @After(value = "logPointCut()")
-    public void doAfter(JoinPoint joinPoint) {
-        afterTime = new Date();
-        handleLog(joinPoint, null);
-    }
-
-    /**
-     * 前置通知 用于拦截操作，在方法返回后执行
-     * @param joinPoint 切点
-     */
-    @AfterReturning(pointcut = "logPointCut()")
+    @AfterReturning (value = "logPointCut()")
     public void doAfterReturning(JoinPoint joinPoint) {
+        normal = true;
         afterReturningTime = new Date();
         handleLog(joinPoint, null);
     }
@@ -70,6 +62,7 @@ public class LogAspect {
      */
     @AfterThrowing(value = "logPointCut()", throwing = "e")
     public void doAfterThrowing(JoinPoint joinPoint, Exception e) {
+        normal = false;
         afterThrowingTime = new Date();
         handleLog(joinPoint, e);
     }
@@ -91,18 +84,17 @@ public class LogAspect {
             log.info(">>>>>>>>>>>>>模块名称：{}",title);
             log.info(">>>>>>>>>>>>>操作名称：{}",action);
             log.info(">>>>>>>>>>>>>类名：{}",className);
+            log.info(">>>>>>>>>>>>>方法名：{}",methodName);
             Long seconds = null;
             log.info(">>>>>>>>>>>>>运行时间：{}",sdf.format(beforeTime));
-            if(afterTime!=null){
-                log.info(">>>>>>>>>>>>>结束时间：{}",sdf.format(afterTime));
-                seconds = (afterTime.getTime()-beforeTime.getTime())/1000;
-                log.info(">>>>>>>>>>>>>耗时：{}",seconds);
-            }else if(afterThrowingTime!=null){
-                log.info(">>>>>>>>>>>>>结束时间：{}",sdf.format(afterThrowingTime));
-                seconds = (afterThrowingTime.getTime()-beforeTime.getTime())/1000;
-                log.info(">>>>>>>>>>>>>耗时：{}",seconds);
+            if(normal){
+                log.info(">>>>>>>>>>>>>结束时间：{}",sdf.format(afterReturningTime));
+                seconds = (afterReturningTime.getTime()-beforeTime.getTime())/1000;
+                log.info(">>>>>>>>>>>>>耗时：{}",seconds,"s");
             }else{
-                log.debug(">>>>>>>>>>>>>未能捕获该方法的结束时间!");
+                log.info(">>>>>>>>>>>>>抛出异常时间：{}",sdf.format(afterThrowingTime));
+                seconds = (afterThrowingTime.getTime()-beforeTime.getTime())/1000;
+                log.info(">>>>>>>>>>>>>耗时：{}",seconds,"s");
             }
 
         } catch (Exception exp) {

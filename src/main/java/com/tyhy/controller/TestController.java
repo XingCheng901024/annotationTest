@@ -22,8 +22,19 @@ public class TestController {
     @RequestMapping(value="/hello",method= RequestMethod.GET)
     @ResponseBody
     @SystemControllerLog(title="哈喽模块",action="say哈喽",author = "xingcheng")
-    public String hello() throws InterruptedException {
-        //Thread.sleep(3000);
+    public void hello() throws InterruptedException {
+        Thread.sleep(3000);
+        //return "哈喽";
+    }
+
+    @RequestMapping(value="/exception",method= RequestMethod.GET)
+    @ResponseBody
+    @SystemControllerLog(title="exception",action="say exception",author = "xingcheng")
+    public String exception() throws Exception {
+        if(1<2){
+            Thread.sleep(1000);
+            throw new Exception();
+        }
         return "哈喽";
     }
 
